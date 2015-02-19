@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=yes">
+</head>
+<body>
+
+<style type="text/css">
+<!--
+tr.header { background-color: #eeeeee; }
+-->
+</style>
+
+<title>時刻表: 産総研（つくば中央）発・つくば駅行バス（平日）</title>
+<p>産総研つくば中央からつくば駅へのバス時刻表（平日）。
+<p>路線バスは、並木2丁目（つくば駅方面）バス停で乗車、270円。
+産総研/物材研バスは、産総研中央第一のバス乗り場で乗車、無料。</p>
+
+<div>
+<input type="radio" name="mode" id="radio0" onclick="onToggle(this);" checked /> 現在時刻<span id="curr_time">00:00:00</span>以降のみ表示
+<input type="radio" name="mode" id="radio1" onclick="onToggle(this);" /> すべて表示
+</div>
+<hr/>
+
+<table id="schedtbl">
+	<tr class="header"><td>残り時間</span></td><td>発車時刻</td><td>バス名称</td><td>乗り場</td></tr>
+</table>
+
+<script type="text/javascript">
+var Destinations = ["つくばセンター行き", "建築研行き", "学園南循環（宇宙研経由）", "下妻駅行き", "産総研/物材研バス"];
+var Routes = [{'route': 0, 'time': 380}, {'route': 0, 'time': 387}, {'route': 2, 'time': 420}, {'route': 0, 'time': 434}, {'route': 0, 'time': 449}, {'route': 0, 'time': 450}, {'route': 4, 'time': 451}, {'route': 4, 'time': 466}, {'route': 0, 'time': 469}, {'route': 2, 'time': 477}, {'route': 4, 'time': 488}, {'route': 1, 'time': 489}, {'route': 0, 'time': 492}, {'route': 4, 'time': 506}, {'route': 0, 'time': 509}, {'route': 3, 'time': 512}, {'route': 0, 'time': 522}, {'route': 0, 'time': 530}, {'route': 4, 'time': 531}, {'route': 2, 'time': 535}, {'route': 0, 'time': 536}, {'route': 4, 'time': 565}, {'route': 0, 'time': 569}, {'route': 2, 'time': 595}, {'route': 4, 'time': 595}, {'route': 0, 'time': 599}, {'route': 3, 'time': 617}, {'route': 4, 'time': 633}, {'route': 0, 'time': 644}, {'route': 2, 'time': 655}, {'route': 4, 'time': 655}, {'route': 0, 'time': 665}, {'route': 0, 'time': 679}, {'route': 4, 'time': 685}, {'route': 0, 'time': 704}, {'route': 2, 'time': 715}, {'route': 0, 'time': 739}, {'route': 0, 'time': 769}, {'route': 2, 'time': 775}, {'route': 4, 'time': 775}, {'route': 0, 'time': 799}, {'route': 4, 'time': 805}, {'route': 0, 'time': 824}, {'route': 2, 'time': 835}, {'route': 4, 'time': 835}, {'route': 0, 'time': 845}, {'route': 0, 'time': 859}, {'route': 4, 'time': 865}, {'route': 2, 'time': 895}, {'route': 4, 'time': 895}, {'route': 0, 'time': 896}, {'route': 0, 'time': 919}, {'route': 4, 'time': 933}, {'route': 0, 'time': 944}, {'route': 4, 'time': 953}, {'route': 2, 'time': 955}, {'route': 0, 'time': 972}, {'route': 0, 'time': 979}, {'route': 3, 'time': 982}, {'route': 4, 'time': 990}, {'route': 0, 'time': 1004}, {'route': 2, 'time': 1005}, {'route': 4, 'time': 1005}, {'route': 0, 'time': 1039}, {'route': 0, 'time': 1050}, {'route': 0, 'time': 1064}, {'route': 2, 'time': 1072}, {'route': 0, 'time': 1099}, {'route': 0, 'time': 1119}, {'route': 0, 'time': 1120}, {'route': 2, 'time': 1132}, {'route': 3, 'time': 1137}, {'route': 0, 'time': 1139}, {'route': 0, 'time': 1164}, {'route': 0, 'time': 1184}, {'route': 2, 'time': 1195}, {'route': 0, 'time': 1200}, {'route': 0, 'time': 1209}, {'route': 0, 'time': 1224}, {'route': 0, 'time': 1249}, {'route': 0, 'time': 1272}, {'route': 2, 'time': 1277}, {'route': 0, 'time': 1302}, {'route': 0, 'time': 1327}, {'route': 0, 'time': 1352}];
+
+
+function get_str_from_hm(num) {
+	var h = Math.floor(num / 60);
+	var m = num % 60;
+	var hstr = ("0" + h).slice(-2);
+	var mstr = ("0" + m).slice(-2);
+
+	return hstr + ":" + mstr;
+}
+
+function get_str_from_hms(sec) {
+	var h = Math.floor(sec / 3600);
+	var m = Math.floor((sec % 3600) / 60);
+	var s = (sec % 3600) % 60;
+	var hstr = ("0" + h).slice(-2);
+	var mstr = ("0" + m).slice(-2);
+	var sstr = ("0" + s).slice(-2);
+
+	return hstr + ":" + mstr + ":" + sstr;
+}
+
+function get_diff_string(stime, etime) {
+	var diff = etime - stime;
+	var abs  = Math.abs(diff);
+	var h = Math.floor(abs / 3600);
+	var m = Math.floor((abs % 3600) / 60);
+	var s = (abs % 3600) % 60;
+
+	if (abs > 3600)
+		return "";
+
+	var diff_string = "";
+	if (abs < 300) {
+		diff_string += ("0" + m).slice(-2) + "m";
+		diff_string += ("0" + s).slice(-2) + "s";
+	} else
+		diff_string  = ("0" + m).slice(-2) + "m";
+
+	if (diff < 0)
+		diff_string = "-" + diff_string;
+	else
+		diff_string = "+" + diff_string;
+
+	return diff_string;
+}
+
+function draw_timetable() {
+	var objBody = document.getElementById("schedtbl"); 
+	for (i = 0; i < Routes.length; i++) {
+		var bus = Routes[i];
+		var depart_time = get_str_from_hm(bus["time"]);
+
+		var elem_tr = document.createElement('tr'); 
+		elem_tr.id = "id" + i; 
+		elem_tr.innerHTML   = '<td>' + "+10" + '</td>';
+		elem_tr.innerHTML  += '<td>' + depart_time + '</td>';
+		elem_tr.innerHTML  += '<td>' + Destinations[bus["route"]] + '</td>';
+		if (bus["route"] == 4) {
+			elem_tr.innerHTML += '<td class="stop">' + "産総研バス乗り場" + '</td>';
+		} else {
+			elem_tr.innerHTML += '<td class="stop">' + "並木2丁目（北方面）" + '</td>';
+		}
+		objBody.appendChild(elem_tr); 
+	}
+}
+
+
+draw_timetable();
+
+
+function update_curr_time() {
+	var now = new Date(); 
+	var nowsec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+	var nowstr = get_str_from_hms(nowsec);
+
+	var span = document.getElementById("curr_time");
+	span.innerHTML = "(" + nowstr + ")";
+
+	function find_next_bus_index() {
+		for (var i = 0; i < Routes.length; i++) {
+			var bus = Routes[i];
+			if (bus["time"] > nowsec / 60) {
+				break;
+			}
+		}
+
+		return i;
+	}
+
+	var next_bus_index = find_next_bus_index();
+
+	for (var i = 0; i < next_bus_index - 2; i++) {
+		var id = "id" + i;
+		var elem_tr = document.getElementById(id);
+		elem_tr.style.color = "gray";
+		elem_tr.style.display = "none";
+	}
+
+	for (var i = next_bus_index - 2; i < next_bus_index; i++) {
+		if (i < 0)
+			break;
+		var id = "id" + i;
+		var elem_tr = document.getElementById(id);
+		elem_tr.style.color = "gray";
+
+		var elem_td = elem_tr.getElementsByTagName("td")[0];
+		var departure_time = Routes[i]["time"];
+		elem_td.innerHTML = get_diff_string(nowsec, departure_time * 60);
+	}
+
+	for (var i = next_bus_index; i < Routes.length; i++) {
+		var id = "id" + i;
+		var elem_tr = document.getElementById(id);
+
+		if (i == next_bus_index)
+			elem_tr.style.color = "orangered";
+		else
+			elem_tr.style.color = "black";
+
+		var elem_td = elem_tr.getElementsByTagName("td")[0];
+		var departure_time = Routes[i]["time"];
+		elem_td.innerHTML = get_diff_string(nowsec, departure_time * 60);
+	}
+}
+
+var timer = setInterval(update_curr_time, 1000);
+
+
+function onToggle(elem) {
+	if (elem.id == "radio1") {
+		clearInterval(timer);
+		for (var i = 0; i < Routes.length; i++) {
+			var id = "id" + i;
+			var elem_tr = document.getElementById(id);
+			elem_tr.style.color = "black";
+			elem_tr.style.display = "table-row";
+			var elem_td = elem_tr.getElementsByTagName("td")[0];
+			elem_td.innerHTML = "";
+		}
+		var elem = document.getElementById("curr_time");
+		elem.innerHTML = "";
+	} else
+		timer = setInterval(update_curr_time, 1000);
+}
+
+
+
+</script>
+</body></html>
