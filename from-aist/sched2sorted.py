@@ -18,8 +18,9 @@ r1 = load_sched("data/kenchiku.txt", 1)
 r2 = load_sched("data/minami-junkan-east.txt", 2)
 r3 = load_sched("data/shimotsuma.txt", 3)
 r4 = load_sched("data/aist.txt", 4)
+r5 = load_sched("data/tokyo.txt", 5)
 #print r1,r2,r3,r4
 
-allroutes = r0 + r1 + r2 + r3 + r4
+allroutes = r0 + r1 + r2 + r3 + r4 + r5
 
 print sorted(allroutes, key=lambda x: x["time"])
