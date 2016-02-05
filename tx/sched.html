@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=yes">
+</head>
+<body>
+
+<style type="text/css">
+<!--
+tr.header { background-color: #eeeeee; }
+-->
+</style>
+
+<title>時刻表: つくばエクスプレス・つくば駅発（平日）</title>
+<div>
+<font size="-2">
+<input type="radio" name="mode" id="radio0" onclick="onToggle(this);" checked /> 現在時刻<span id="curr_time">00:00:00</span>以降のみ表示<br/>
+<input type="radio" name="mode" id="radio1" onclick="onToggle(this);" /> すべて表示
+</font>
+</div>
+<hr/>
+
+<table id="schedtbl">
+	<tr class="header"><td>残り時間</span></td><td>発車時刻</td><td>種別</td></tr>
+</table>
+
+
+<script type="text/javascript">
+var Types = {'r': "快速", 's': "区快", 'n': "普通" };
+var Routes = [{'route': 's', 'time': 930}, {'route': 'n', 'time': 945}, {'route': 'r', 'time': 955}, {'route': 's', 'time': 960}, {'route': 'n', 'time': 975}, {'route': 'r', 'time': 987}, {'route': 's', 'time': 990}, {'route': 's', 'time': 1003}, {'route': 's', 'time': 1012}, {'route': 's', 'time': 1022}, {'route': 's', 'time': 1033}, {'route': 'r', 'time': 1047}, {'route': 's', 'time': 1049}, {'route': 's', 'time': 1063}, {'route': 'r', 'time': 1077}, {'route': 's', 'time': 1080}, {'route': 'n', 'time': 1089}, {'route': 'r', 'time': 1099}, {'route': 's', 'time': 1101}, {'route': 's', 'time': 1110}, {'route': 'n', 'time': 1119}, {'route': 'r', 'time': 1129}, {'route': 's', 'time': 1134}, {'route': 's', 'time': 1142}, {'route': 'n', 'time': 1153}, {'route': 'r', 'time': 1163}, {'route': 'n', 'time': 1167}, {'route': 'r', 'time': 1177}, {'route': 'n', 'time': 1181}, {'route': 'r', 'time': 1191}, {'route': 's', 'time': 1198}, {'route': 'n', 'time': 1210}, {'route': 'r', 'time': 1220}, {'route': 's', 'time': 1225}, {'route': 's', 'time': 1237}, {'route': 's', 'time': 1250}, {'route': 'n', 'time': 1258}, {'route': 'r', 'time': 1268}, {'route': 's', 'time': 1270}, {'route': 's', 'time': 1285}, {'route': 's', 'time': 1300}, {'route': 's', 'time': 1315}, {'route': 's', 'time': 1330}, {'route': 's', 'time': 1344}, {'route': 'n', 'time': 1359}, {'route': 's', 'time': 1378}, {'route': 's', 'time': 1378}, {'route': 'n', 'time': 1394}];
+
+function get_str_from_hm(num) {
+	var h = Math.floor(num / 60);
+	var m = num % 60;
+	var hstr = ("0" + h).slice(-2);
+	var mstr = ("0" + m).slice(-2);
+
+	return hstr + ":" + mstr;
+}
+
+function get_str_from_hms(sec) {
+	var h = Math.floor(sec / 3600);
+	var m = Math.floor((sec % 3600) / 60);
+	var s = (sec % 3600) % 60;
+	var hstr = ("0" + h).slice(-2);
+	var mstr = ("0" + m).slice(-2);
+	var sstr = ("0" + s).slice(-2);
+
+	return hstr + ":" + mstr + ":" + sstr;
+}
+
+function get_diff_string(stime, etime) {
+	var diff = etime - stime;
+	var abs  = Math.abs(diff);
+	var h = Math.floor(abs / 3600);
+	var m = Math.floor((abs % 3600) / 60);
+	var s = (abs % 3600) % 60;
+
+	if (abs > 3600)
+		return "";
+
+	var diff_string = "";
+	if (abs < 300) {
+		diff_string += ("0" + m).slice(-2) + "m";
+		diff_string += ("0" + s).slice(-2) + "s";
+	} else
+		diff_string  = ("0" + m).slice(-2) + "m";
+
+	if (diff < 0)
+		diff_string = "-" + diff_string;
+	else
+		diff_string = "+" + diff_string;
+
+	return diff_string;
+}
+
+
+function update_color(i) {
+	var bus = Routes[i];
+	var elem_tr = document.getElementById("id" + i);
+
+	if (bus["route"] == 'r') {
+		elem_tr.style.color = "red";
+	} else if (bus["route"] == 's') {
+		elem_tr.style.color = "black";
+	} else if (bus["route"] == 'n') {
+		elem_tr.style.color = "gray";
+	}
+}
+
+
+function draw_timetable() {
+	var objBody = document.getElementById("schedtbl"); 
+	for (i = 0; i < Routes.length; i++) {
+		var bus = Routes[i];
+		var depart_time = get_str_from_hm(bus["time"]);
+
+		var elem_tr = document.createElement('tr'); 
+		elem_tr.id = "id" + i; 
+		elem_tr.innerHTML   = '<td>' + "+10" + '</td>';
+		elem_tr.innerHTML  += '<td>' + depart_time + '</td>';
+		elem_tr.innerHTML  += '<td>' + Types[bus["route"]] + '</td>';
+		objBody.appendChild(elem_tr); 
+		update_color(i);
+	}
+}
+
+
+draw_timetable();
+
+
+function update_curr_time() {
+	var now = new Date(); 
+	var nowsec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+	var nowstr = get_str_from_hms(nowsec);
+
+	var span = document.getElementById("curr_time");
+	span.innerHTML = "(" + nowstr + ")";
+
+	function find_next_bus_index() {
+		for (var i = 0; i < Routes.length; i++) {
+			var bus = Routes[i];
+			if (bus["time"] > nowsec / 60) {
+				break;
+			}
+		}
+
+		return i;
+	}
+
+	var next_bus_index = find_next_bus_index();
+
+	for (var i = 0; i < next_bus_index - 2; i++) {
+		var id = "id" + i;
+		var elem_tr = document.getElementById(id);
+		elem_tr.style.color = "gray";
+		elem_tr.style.display = "none";
+	}
+
+	for (var i = next_bus_index - 2; i < next_bus_index; i++) {
+		if (i < 0)
+			break;
+		var id = "id" + i;
+		var elem_tr = document.getElementById(id);
+		elem_tr.style.color = "gray";
+
+		var elem_td = elem_tr.getElementsByTagName("td")[0];
+		var departure_time = Routes[i]["time"];
+		elem_td.innerHTML = get_diff_string(nowsec, departure_time * 60);
+	}
+
+	for (var i = next_bus_index; i < Routes.length; i++) {
+		var id = "id" + i;
+		var elem_tr = document.getElementById(id);
+
+		if (i == next_bus_index) {
+			// elem_tr.style.color = "orangered";
+			// elem_tr.style.border = "1px solid #000000";
+		} else {
+			// elem_tr.style.color = "black";
+		}
+
+		var elem_td = elem_tr.getElementsByTagName("td")[0];
+		var departure_time = Routes[i]["time"];
+		elem_td.innerHTML = get_diff_string(nowsec, departure_time * 60);
+	}
+}
+
+var timer = setInterval(update_curr_time, 1000);
+
+
+function onToggle(elem) {
+	if (elem.id == "radio1") {
+		clearInterval(timer);
+		for (var i = 0; i < Routes.length; i++) {
+			var id = "id" + i;
+			var elem_tr = document.getElementById(id);
+			update_color(i);
+			elem_tr.style.display = "table-row";
+			var elem_td = elem_tr.getElementsByTagName("td")[0];
+			elem_td.innerHTML = "";
+		}
+		var elem = document.getElementById("curr_time");
+		elem.innerHTML = "";
+	} else
+		timer = setInterval(update_curr_time, 1000);
+}
+
+
+
+</script>
+</body></html>
